@@ -19,33 +19,32 @@ public final class BlessingAcceptGivePicRspOuterClass {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>uint32 uid = 2;</code>
-     * @return The uid.
-     */
-    int getUid();
-
-    /**
-     * <code>uint32 pic_id = 4;</code>
+     * <code>uint32 pic_id = 5;</code>
      * @return The picId.
      */
     int getPicId();
 
     /**
-     * <code>int32 retcode = 15;</code>
-     * @return The retcode.
+     * <code>uint32 uid = 8;</code>
+     * @return The uid.
      */
-    int getRetcode();
+    int getUid();
 
     /**
      * <code>uint32 index = 9;</code>
      * @return The index.
      */
     int getIndex();
+
+    /**
+     * <code>int32 retcode = 14;</code>
+     * @return The retcode.
+     */
+    int getRetcode();
   }
   /**
    * <pre>
-   * CmdId: 22770
-   * Obf: HKAPDDBOIKB
+   * CmdId: 9387
    * </pre>
    *
    * Protobuf type {@code BlessingAcceptGivePicRsp}
@@ -92,14 +91,14 @@ public final class BlessingAcceptGivePicRspOuterClass {
             case 0:
               done = true;
               break;
-            case 16: {
-
-              uid_ = input.readUInt32();
-              break;
-            }
-            case 32: {
+            case 40: {
 
               picId_ = input.readUInt32();
+              break;
+            }
+            case 64: {
+
+              uid_ = input.readUInt32();
               break;
             }
             case 72: {
@@ -107,7 +106,7 @@ public final class BlessingAcceptGivePicRspOuterClass {
               index_ = input.readUInt32();
               break;
             }
-            case 120: {
+            case 112: {
 
               retcode_ = input.readInt32();
               break;
@@ -144,21 +143,10 @@ public final class BlessingAcceptGivePicRspOuterClass {
               emu.grasscutter.net.proto.BlessingAcceptGivePicRspOuterClass.BlessingAcceptGivePicRsp.class, emu.grasscutter.net.proto.BlessingAcceptGivePicRspOuterClass.BlessingAcceptGivePicRsp.Builder.class);
     }
 
-    public static final int UID_FIELD_NUMBER = 2;
-    private int uid_;
-    /**
-     * <code>uint32 uid = 2;</code>
-     * @return The uid.
-     */
-    @java.lang.Override
-    public int getUid() {
-      return uid_;
-    }
-
-    public static final int PIC_ID_FIELD_NUMBER = 4;
+    public static final int PIC_ID_FIELD_NUMBER = 5;
     private int picId_;
     /**
-     * <code>uint32 pic_id = 4;</code>
+     * <code>uint32 pic_id = 5;</code>
      * @return The picId.
      */
     @java.lang.Override
@@ -166,15 +154,15 @@ public final class BlessingAcceptGivePicRspOuterClass {
       return picId_;
     }
 
-    public static final int RETCODE_FIELD_NUMBER = 15;
-    private int retcode_;
+    public static final int UID_FIELD_NUMBER = 8;
+    private int uid_;
     /**
-     * <code>int32 retcode = 15;</code>
-     * @return The retcode.
+     * <code>uint32 uid = 8;</code>
+     * @return The uid.
      */
     @java.lang.Override
-    public int getRetcode() {
-      return retcode_;
+    public int getUid() {
+      return uid_;
     }
 
     public static final int INDEX_FIELD_NUMBER = 9;
@@ -186,6 +174,17 @@ public final class BlessingAcceptGivePicRspOuterClass {
     @java.lang.Override
     public int getIndex() {
       return index_;
+    }
+
+    public static final int RETCODE_FIELD_NUMBER = 14;
+    private int retcode_;
+    /**
+     * <code>int32 retcode = 14;</code>
+     * @return The retcode.
+     */
+    @java.lang.Override
+    public int getRetcode() {
+      return retcode_;
     }
 
     private byte memoizedIsInitialized = -1;
@@ -202,17 +201,17 @@ public final class BlessingAcceptGivePicRspOuterClass {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (uid_ != 0) {
-        output.writeUInt32(2, uid_);
-      }
       if (picId_ != 0) {
-        output.writeUInt32(4, picId_);
+        output.writeUInt32(5, picId_);
+      }
+      if (uid_ != 0) {
+        output.writeUInt32(8, uid_);
       }
       if (index_ != 0) {
         output.writeUInt32(9, index_);
       }
       if (retcode_ != 0) {
-        output.writeInt32(15, retcode_);
+        output.writeInt32(14, retcode_);
       }
       unknownFields.writeTo(output);
     }
@@ -223,13 +222,13 @@ public final class BlessingAcceptGivePicRspOuterClass {
       if (size != -1) return size;
 
       size = 0;
-      if (uid_ != 0) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeUInt32Size(2, uid_);
-      }
       if (picId_ != 0) {
         size += com.google.protobuf.CodedOutputStream
-          .computeUInt32Size(4, picId_);
+          .computeUInt32Size(5, picId_);
+      }
+      if (uid_ != 0) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt32Size(8, uid_);
       }
       if (index_ != 0) {
         size += com.google.protobuf.CodedOutputStream
@@ -237,7 +236,7 @@ public final class BlessingAcceptGivePicRspOuterClass {
       }
       if (retcode_ != 0) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(15, retcode_);
+          .computeInt32Size(14, retcode_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -254,14 +253,14 @@ public final class BlessingAcceptGivePicRspOuterClass {
       }
       emu.grasscutter.net.proto.BlessingAcceptGivePicRspOuterClass.BlessingAcceptGivePicRsp other = (emu.grasscutter.net.proto.BlessingAcceptGivePicRspOuterClass.BlessingAcceptGivePicRsp) obj;
 
-      if (getUid()
-          != other.getUid()) return false;
       if (getPicId()
           != other.getPicId()) return false;
-      if (getRetcode()
-          != other.getRetcode()) return false;
+      if (getUid()
+          != other.getUid()) return false;
       if (getIndex()
           != other.getIndex()) return false;
+      if (getRetcode()
+          != other.getRetcode()) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -273,14 +272,14 @@ public final class BlessingAcceptGivePicRspOuterClass {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
-      hash = (37 * hash) + UID_FIELD_NUMBER;
-      hash = (53 * hash) + getUid();
       hash = (37 * hash) + PIC_ID_FIELD_NUMBER;
       hash = (53 * hash) + getPicId();
-      hash = (37 * hash) + RETCODE_FIELD_NUMBER;
-      hash = (53 * hash) + getRetcode();
+      hash = (37 * hash) + UID_FIELD_NUMBER;
+      hash = (53 * hash) + getUid();
       hash = (37 * hash) + INDEX_FIELD_NUMBER;
       hash = (53 * hash) + getIndex();
+      hash = (37 * hash) + RETCODE_FIELD_NUMBER;
+      hash = (53 * hash) + getRetcode();
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -378,8 +377,7 @@ public final class BlessingAcceptGivePicRspOuterClass {
     }
     /**
      * <pre>
-     * CmdId: 22770
-     * Obf: HKAPDDBOIKB
+     * CmdId: 9387
      * </pre>
      *
      * Protobuf type {@code BlessingAcceptGivePicRsp}
@@ -419,13 +417,13 @@ public final class BlessingAcceptGivePicRspOuterClass {
       @java.lang.Override
       public Builder clear() {
         super.clear();
-        uid_ = 0;
-
         picId_ = 0;
 
-        retcode_ = 0;
+        uid_ = 0;
 
         index_ = 0;
+
+        retcode_ = 0;
 
         return this;
       }
@@ -453,10 +451,10 @@ public final class BlessingAcceptGivePicRspOuterClass {
       @java.lang.Override
       public emu.grasscutter.net.proto.BlessingAcceptGivePicRspOuterClass.BlessingAcceptGivePicRsp buildPartial() {
         emu.grasscutter.net.proto.BlessingAcceptGivePicRspOuterClass.BlessingAcceptGivePicRsp result = new emu.grasscutter.net.proto.BlessingAcceptGivePicRspOuterClass.BlessingAcceptGivePicRsp(this);
-        result.uid_ = uid_;
         result.picId_ = picId_;
-        result.retcode_ = retcode_;
+        result.uid_ = uid_;
         result.index_ = index_;
+        result.retcode_ = retcode_;
         onBuilt();
         return result;
       }
@@ -505,17 +503,17 @@ public final class BlessingAcceptGivePicRspOuterClass {
 
       public Builder mergeFrom(emu.grasscutter.net.proto.BlessingAcceptGivePicRspOuterClass.BlessingAcceptGivePicRsp other) {
         if (other == emu.grasscutter.net.proto.BlessingAcceptGivePicRspOuterClass.BlessingAcceptGivePicRsp.getDefaultInstance()) return this;
-        if (other.getUid() != 0) {
-          setUid(other.getUid());
-        }
         if (other.getPicId() != 0) {
           setPicId(other.getPicId());
         }
-        if (other.getRetcode() != 0) {
-          setRetcode(other.getRetcode());
+        if (other.getUid() != 0) {
+          setUid(other.getUid());
         }
         if (other.getIndex() != 0) {
           setIndex(other.getIndex());
+        }
+        if (other.getRetcode() != 0) {
+          setRetcode(other.getRetcode());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -546,40 +544,9 @@ public final class BlessingAcceptGivePicRspOuterClass {
         return this;
       }
 
-      private int uid_ ;
-      /**
-       * <code>uint32 uid = 2;</code>
-       * @return The uid.
-       */
-      @java.lang.Override
-      public int getUid() {
-        return uid_;
-      }
-      /**
-       * <code>uint32 uid = 2;</code>
-       * @param value The uid to set.
-       * @return This builder for chaining.
-       */
-      public Builder setUid(int value) {
-        
-        uid_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>uint32 uid = 2;</code>
-       * @return This builder for chaining.
-       */
-      public Builder clearUid() {
-        
-        uid_ = 0;
-        onChanged();
-        return this;
-      }
-
       private int picId_ ;
       /**
-       * <code>uint32 pic_id = 4;</code>
+       * <code>uint32 pic_id = 5;</code>
        * @return The picId.
        */
       @java.lang.Override
@@ -587,7 +554,7 @@ public final class BlessingAcceptGivePicRspOuterClass {
         return picId_;
       }
       /**
-       * <code>uint32 pic_id = 4;</code>
+       * <code>uint32 pic_id = 5;</code>
        * @param value The picId to set.
        * @return This builder for chaining.
        */
@@ -598,7 +565,7 @@ public final class BlessingAcceptGivePicRspOuterClass {
         return this;
       }
       /**
-       * <code>uint32 pic_id = 4;</code>
+       * <code>uint32 pic_id = 5;</code>
        * @return This builder for chaining.
        */
       public Builder clearPicId() {
@@ -608,33 +575,33 @@ public final class BlessingAcceptGivePicRspOuterClass {
         return this;
       }
 
-      private int retcode_ ;
+      private int uid_ ;
       /**
-       * <code>int32 retcode = 15;</code>
-       * @return The retcode.
+       * <code>uint32 uid = 8;</code>
+       * @return The uid.
        */
       @java.lang.Override
-      public int getRetcode() {
-        return retcode_;
+      public int getUid() {
+        return uid_;
       }
       /**
-       * <code>int32 retcode = 15;</code>
-       * @param value The retcode to set.
+       * <code>uint32 uid = 8;</code>
+       * @param value The uid to set.
        * @return This builder for chaining.
        */
-      public Builder setRetcode(int value) {
+      public Builder setUid(int value) {
         
-        retcode_ = value;
+        uid_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>int32 retcode = 15;</code>
+       * <code>uint32 uid = 8;</code>
        * @return This builder for chaining.
        */
-      public Builder clearRetcode() {
+      public Builder clearUid() {
         
-        retcode_ = 0;
+        uid_ = 0;
         onChanged();
         return this;
       }
@@ -666,6 +633,37 @@ public final class BlessingAcceptGivePicRspOuterClass {
       public Builder clearIndex() {
         
         index_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private int retcode_ ;
+      /**
+       * <code>int32 retcode = 14;</code>
+       * @return The retcode.
+       */
+      @java.lang.Override
+      public int getRetcode() {
+        return retcode_;
+      }
+      /**
+       * <code>int32 retcode = 14;</code>
+       * @param value The retcode to set.
+       * @return This builder for chaining.
+       */
+      public Builder setRetcode(int value) {
+        
+        retcode_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>int32 retcode = 14;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearRetcode() {
+        
+        retcode_ = 0;
         onChanged();
         return this;
       }
@@ -737,9 +735,9 @@ public final class BlessingAcceptGivePicRspOuterClass {
   static {
     java.lang.String[] descriptorData = {
       "\n\036BlessingAcceptGivePicRsp.proto\"W\n\030Bles" +
-      "singAcceptGivePicRsp\022\013\n\003uid\030\002 \001(\r\022\016\n\006pic" +
-      "_id\030\004 \001(\r\022\017\n\007retcode\030\017 \001(\005\022\r\n\005index\030\t \001(" +
-      "\rB\033\n\031emu.grasscutter.net.protob\006proto3"
+      "singAcceptGivePicRsp\022\016\n\006pic_id\030\005 \001(\r\022\013\n\003" +
+      "uid\030\010 \001(\r\022\r\n\005index\030\t \001(\r\022\017\n\007retcode\030\016 \001(" +
+      "\005B\033\n\031emu.grasscutter.net.protob\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -750,7 +748,7 @@ public final class BlessingAcceptGivePicRspOuterClass {
     internal_static_BlessingAcceptGivePicRsp_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_BlessingAcceptGivePicRsp_descriptor,
-        new java.lang.String[] { "Uid", "PicId", "Retcode", "Index", });
+        new java.lang.String[] { "PicId", "Uid", "Index", "Retcode", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)
