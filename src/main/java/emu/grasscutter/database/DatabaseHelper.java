@@ -1,7 +1,6 @@
 package emu.grasscutter.database;
 
 import static com.mongodb.client.model.Filters.eq;
-
 import dev.morphia.query.*;
 import dev.morphia.query.experimental.filters.Filters;
 import emu.grasscutter.*;
@@ -30,9 +29,9 @@ import lombok.Getter;
 public final class DatabaseHelper {
     @Getter
     private static final ExecutorService eventExecutor =
-            new ThreadPoolExecutor(
-                    6,
-                    6,
+                   new ThreadPoolExecutor(
+                    10,
+                    20,
                     60,
                     TimeUnit.SECONDS,
                     new LinkedBlockingDeque<>(),

@@ -235,45 +235,22 @@ public final class SetPropCommand implements CommandHandler {
         return true;
     }
 
-    private boolean unlockMap(Player targetPlayer, int value) {
-        // Unlock.
-        GameData.getScenePointsPerScene()
-                .forEach(
-                        (sceneId, scenePoints) -> {
-                            if (value == -2) {
-                                // Unlock trans points.
-                                targetPlayer.getUnlockedScenePoints(sceneId).addAll(scenePoints);
-                            } else {
-                                var scenePointsBackup = new CopyOnWriteArrayList<>(scenePoints);
-                                for (var p : scenePointsBackup) {
-                                    var scenePointEentry = GameData.getScenePointEntryById(sceneId, p);
-                                    var pointData = scenePointEentry.getPointData();
-
-                                    boolean forbidSimpleUnlock = pointData.isForbidSimpleUnlock();
-                                    boolean sceneBuildingPointLocked =
-                                            pointData.getType().equals("SceneBuildingPoint") && !pointData.isUnlocked();
-
-                                    if (forbidSimpleUnlock || sceneBuildingPointLocked) scenePointsBackup.remove(p);
-                                }
-
-                                // Unlock trans points.
-                                targetPlayer.getUnlockedScenePoints(sceneId).addAll(scenePointsBackup);
-                            }
-
-                            // Unlock map areas.
-                            targetPlayer.getUnlockedSceneAreas(sceneId).addAll(sceneAreas);
-                        });
-
-        // Send notify.
-        int playerScene = targetPlayer.getSceneId();
-        targetPlayer.sendPacket(
-                new PacketScenePointUnlockNotify(
-                        playerScene, targetPlayer.getUnlockedScenePoints(playerScene)));
-        targetPlayer.sendPacket(
-                new PacketSceneAreaUnlockNotify(
-                        playerScene, targetPlayer.getUnlockedSceneAreas(playerScene)));
+	private boolean unlockMap(Player targetPlayer, int value) {
+        //unlock map
+		if (value == 1) {
+		targetPlayer.getUnlockedSceneAreas(3).addAll(sceneAreas);
+		targetPlayer.getUnlockedSceneAreas(4).addAll(sceneAreas);
+		targetPlayer.getUnlockedSceneAreas(5).addAll(sceneAreas);
+		targetPlayer.getUnlockedSceneAreas(6).addAll(sceneAreas);
+		targetPlayer.getUnlockedSceneAreas(7).addAll(sceneAreas);
+		GameData.getScenePointsPerScene().forEach((sceneId, scenePoints) -> targetPlayer.getUnlockedScenePoints(sceneId.intValue()).addAll(scenePoints));
+		}
+        //send notify 
+		int playerScene = targetPlayer.getSceneId();
+        targetPlayer.sendPacket(new PacketScenePointUnlockNotify(playerScene, targetPlayer.getUnlockedScenePoints(playerScene)));
+        targetPlayer.sendPacket(new PacketSceneAreaUnlockNotify(playerScene, targetPlayer.getUnlockedSceneAreas(playerScene)));
         return true;
-    }
+	}
 
     enum PseudoProp {
         NONE,

@@ -388,7 +388,6 @@ public class EntityMonster extends GameEntity {
         if (this.getScene().getPlayers().isEmpty()) {
             return;
         }
-
         var towerManager = getScene().getPlayers().get(0).getTowerManager();
         if (dungeonManager != null && dungeonManager.isTowerDungeon() && towerManager != null) {
             var floor = towerManager.getCurrentFloorNumber();

@@ -94,7 +94,9 @@ public class HandlerGetPlayerTokenReq extends PacketHandler {
         session.setPlayer(player);
 
         // Checks if the player is banned
-        if (session.getAccount().isBanned()) {
+		int banEndTime = session.getAccount().getBanEndTime();
+        // Checks if the player is banned
+        if (session.getAccount().isBanned() || (banEndTime > 0 && banEndTime > System.currentTimeMillis() / 1000)) {
             session.setState(SessionState.ACCOUNT_BANNED);
             session.send(
                     new PacketGetPlayerTokenRsp(

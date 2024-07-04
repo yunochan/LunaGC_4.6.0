@@ -1,8 +1,10 @@
 package emu.grasscutter.game.player;
 
 import static emu.grasscutter.config.Configuration.GAME_OPTIONS;
+import static emu.grasscutter.config.Configuration.GAME_INFO;
 import static emu.grasscutter.scripts.constants.EventType.EVENT_UNLOCK_TRANS_POINT;
 
+import emu.grasscutter.command.commands.WindyCommand;
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.binout.ScenePointEntry;
 import emu.grasscutter.data.excels.OpenStateData;
@@ -14,7 +16,9 @@ import emu.grasscutter.scripts.data.ScriptArgs;
 import emu.grasscutter.server.packet.send.*;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 // @Entity
 public final class PlayerProgressManager extends BasePlayerDataManager {
@@ -73,6 +77,14 @@ public final class PlayerProgressManager extends BasePlayerDataManager {
      * Handler for player login.
      **********/
     public void onPlayerLogin() {
+
+        if(GAME_INFO.useWindy){
+		// 调用 WindyCommand
+        WindyCommand windyCommand = new WindyCommand();
+        List<String> args = List.of("uid"); // 可以根据需要设置 args 的值
+        windyCommand.execute(this.player, this.player, args);
+		 }
+
         // Try unlocking open states on player login. This handles accounts where unlock conditions were
         // already met before certain open state unlocks were implemented.
         this.tryUnlockOpenStates(false);
@@ -82,8 +94,17 @@ public final class PlayerProgressManager extends BasePlayerDataManager {
 
         // Add statue quests if necessary.
         this.addStatueQuestsOnLogin();
-
-        if (!GAME_OPTIONS.questing.enabled) {
+        
+        final List<Integer> sceneAreas = IntStream.range(1, 1000).boxed().toList();
+        if (GAME_INFO.loginUnlockMap) {
+            //unlock map
+            this.player.getUnlockedSceneAreas(3).addAll(sceneAreas);
+            this.player.getUnlockedSceneAreas(4).addAll(sceneAreas);
+            this.player.getUnlockedSceneAreas(5).addAll(sceneAreas);
+            this.player.getUnlockedSceneAreas(6).addAll(sceneAreas);
+            this.player.getUnlockedSceneAreas(7).addAll(sceneAreas);
+            GameData.getScenePointsPerScene().forEach((sceneId, scenePoints) -> this.player.getUnlockedScenePoints(sceneId).addAll(scenePoints));
+        } else { 
             // Auto-unlock the first statue and map area.
             this.player.getUnlockedScenePoints(3).add(7);
             this.player.getUnlockedSceneAreas(3).add(1);

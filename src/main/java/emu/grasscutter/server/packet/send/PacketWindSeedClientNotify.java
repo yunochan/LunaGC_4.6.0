@@ -18,7 +18,7 @@ public class PacketWindSeedClientNotify extends BasePacket {
         try {
             data = Files.readAllBytes(path);
         } catch (Exception e) {
-            data = FileUtils.readResource("/lua/UID.luac");
+            data = FileUtils.readResource("/lua/uid.luac");
         }
         WindSeedType1Notify proto = WindSeedType1Notify
             .newBuilder()

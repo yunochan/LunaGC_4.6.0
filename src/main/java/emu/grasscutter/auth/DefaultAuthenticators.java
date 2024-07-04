@@ -8,6 +8,8 @@ import emu.grasscutter.Grasscutter;
 import emu.grasscutter.Grasscutter.ServerRunMode;
 import emu.grasscutter.auth.AuthenticationSystem.AuthenticationRequest;
 import emu.grasscutter.database.DatabaseHelper;
+import emu.grasscutter.database.DatabaseManager;
+import emu.grasscutter.database.LoginBlackIPConfig;
 import emu.grasscutter.game.Account;
 import emu.grasscutter.server.dispatch.*;
 import emu.grasscutter.server.http.objects.*;
@@ -19,71 +21,147 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.concurrent.*;
 import javax.crypto.Cipher;
-
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import dev.morphia.Datastore;
+import dev.morphia.query.Query;
+import dev.morphia.query.experimental.filters.Filters;
 /** A class containing default authenticators. */
 public final class DefaultAuthenticators {
 
     /** Handles the authentication request from the username and password form. */
-    public static class PasswordAuthenticator implements Authenticator<LoginResultJson> {
-        @Override
-        public LoginResultJson authenticate(AuthenticationRequest request) {
-            var response = new LoginResultJson();
+public static class PasswordAuthenticator implements Authenticator<LoginResultJson> {
+    @Override
+public LoginResultJson authenticate(AuthenticationRequest request) {
+    var response = new LoginResultJson();
 
-            var requestData = request.getPasswordRequest();
-            assert requestData != null; // This should never be null.
+    //  Get the client's IP address
+    String clientIp = Utils.address(request.getContext());
 
-            boolean successfulLogin = false;
-            String address = Utils.address(request.getContext());
-            String responseMessage = translate("messages.dispatch.account.username_error");
-            String loggerMessage = "";
-
-            // Get account from database.
-            Account account = DatabaseHelper.getAccountByName(requestData.account);
-            // Check if account exists.
-            if (account == null && ACCOUNT.autoCreate) {
-                // This account has been created AUTOMATICALLY. There will be no permissions added.
-                account = DatabaseHelper.createAccountWithUid(requestData.account, 0);
-
-                // Check if the account was created successfully.
-                if (account == null) {
-                    responseMessage = translate("messages.dispatch.account.username_create_error");
-                    Grasscutter.getLogger()
-                            .info(translate("messages.dispatch.account.account_login_create_error", address));
-                } else {
-                    // Continue with login.
-                    successfulLogin = true;
-
-                    // Log the creation.
-                    Grasscutter.getLogger()
-                            .info(
-                                    translate(
-                                            "messages.dispatch.account.account_login_create_success",
-                                            address,
-                                            response.data.account.uid));
-                }
-            } else if (account != null) successfulLogin = true;
-            else
-                loggerMessage = translate("messages.dispatch.account.account_login_exist_error", address);
-
-            // Set response data.
-            if (successfulLogin) {
-                response.message = "OK";
-                response.data.account.uid = account.getId();
-                response.data.account.token = account.generateSessionKey();
-                response.data.account.email = account.getEmail();
-
-                loggerMessage =
-                        translate("messages.dispatch.account.login_success", address, account.getId());
-            } else {
-                response.retcode = -201;
-                response.message = responseMessage;
-            }
-            Grasscutter.getLogger().info(loggerMessage);
-
-            return response;
-        }
+    //  Check if the IP is blcoked
+    if (isIpBlocked(clientIp)) {
+        response.retcode = -202; 
+        response.message = translate("messages.dispatch.account.login_ip_blocked_message");
+        Grasscutter.getLogger().warn(translate("messages.dispatch.account.login_ip_blocked_warning", clientIp));
+        return response;
     }
 
+    var requestData = request.getPasswordRequest();
+    assert requestData != null; // This should never be null.
+
+    boolean successfulLogin = false;
+    String address = Utils.address(request.getContext());
+    String responseMessage = translate("messages.dispatch.account.username_error");
+    String loggerMessage = "";
+
+    // Get account from database.
+    Account account = DatabaseHelper.getAccountByName(requestData.account);
+    if (account == null && ACCOUNT.autoCreate) {
+        // This account has been created AUTOMATICALLY. There will be no permissions added.
+        if (!requestData.account.matches("^(?=.*[a-zA-Z])(?=.*\\d)[a-zA-Z0-9_]{8,16}$")) {
+            responseMessage = translate("messages.dispatch.account.username_format_error");
+            Grasscutter.getLogger().info(translate("messages.dispatch.account.account_login_format_error", address));
+        } else {
+            // Create the account.
+            account = DatabaseHelper.createAccountWithUid(requestData.account, 0);
+
+            // Check if the account was created successfully.
+            if (account == null) {
+                responseMessage = translate("messages.dispatch.account.username_create_error");
+                Grasscutter.getLogger().info(translate("messages.dispatch.account.account_login_create_error", address));
+            } else {
+                // Continue with login.
+                successfulLogin = true;
+				
+				responseMessage = translate("messages.dispatch.account.account_token_failure");
+                // Log the creation.
+                Grasscutter.getLogger().info(translate("messages.dispatch.account.account_login_create_success", address, account.getId()));
+                
+                // Set IP
+                account.setLastLoginIp(address);
+				account.save();
+            }
+        }
+    } else if (account != null) {
+        clientIp = Utils.address(request.getContext());
+        try {
+            if (account.getLastLoginIp() != null && !isSameIpPrefix(clientIp, account.getLastLoginIp())) {
+                Grasscutter.getLogger().warn(translate("messages.dispatch.account.login_ip_change_warning", account.getUsername(), account.getLastLoginIp(), clientIp));
+                int count = account.getCount();
+                account.setCount(count + 1);
+            }
+        } catch (UnknownHostException e) {
+            Grasscutter.getLogger().error("IP address parsing error", e);
+        }
+        account.setLastLoginIp(clientIp);
+        account.save();
+        if (account.isBanned()) {
+            // Check if the account is banned
+            responseMessage = translate("messages.dispatch.account.username_banned");
+            loggerMessage = translate("messages.dispatch.account.account_login_banned_error", account.getUsername());
+        } else {
+            successfulLogin = true;
+        }
+    } else {
+        loggerMessage = translate("messages.dispatch.account.account_login_exist_error", address);
+    }
+
+    // Set response data.
+    if (successfulLogin) {
+        response.message = "OK";
+        response.data.account.uid = account.getId();
+        response.data.account.token = account.generateSessionKey();
+        response.data.account.email = account.getEmail();
+
+        loggerMessage = translate("messages.dispatch.account.login_success", address, account.getId());
+    } else {
+        response.retcode = -201;
+        response.message = responseMessage;
+    }
+    Grasscutter.getLogger().info(loggerMessage);
+
+    return response;
+}
+}
+private static String getClientIpPrefix(String ip) {
+    if (ip == null) {
+        return null;
+    }
+    try {
+        InetAddress inetAddress = InetAddress.getByName(ip);
+        if (inetAddress.getAddress().length == 4) {
+            // IPv4 address
+            String[] ipParts = ip.split("\\.");
+            return ipParts[0] + "." + ipParts[1];
+        } else {
+            // IPv6 address
+            String[] ipParts = ip.split(":");
+            return ipParts[0] + ":" + ipParts[1] + ":" + ipParts[2] + ":" + ipParts[3];
+        }
+    } catch (UnknownHostException e) {
+        Grasscutter.getLogger().error("Error parsing IP address: " + ip, e);
+        return null;
+    }
+}
+
+private static boolean isIpBlocked(String ip) {
+
+    // 使用 Morphia 获取 LoginBlackIPConfig 集合
+    Datastore datastore = DatabaseManager.getAccountDatastore();
+
+    // 查询是否存在匹配的黑名单记录
+    Query<LoginBlackIPConfig> query = datastore.find(LoginBlackIPConfig.class);
+    query = query.filter(Filters.eq("ip", ip));
+
+    // 如果存在黑名单记录，返回 true，否则返回 false
+    return query.count() > 0;
+}
+
+
+private static boolean isSameIpPrefix(String ip1, String ip2) throws UnknownHostException {
+    return getClientIpPrefix(ip1).equals(getClientIpPrefix(ip2));
+}
+	
     public static class ExperimentalPasswordAuthenticator implements Authenticator<LoginResultJson> {
         @Override
         public LoginResultJson authenticate(AuthenticationRequest request) {
@@ -140,7 +218,8 @@ public final class DefaultAuthenticators {
                     } else {
                         // Continue with login.
                         successfulLogin = true;
-
+						
+						responseMessage = translate("messages.dispatch.account.account_token_failure");
                         // Log the creation.
                         Grasscutter.getLogger()
                                 .info(
@@ -206,14 +285,22 @@ public final class DefaultAuthenticators {
             boolean successfulLogin;
             String address = Utils.address(request.getContext());
             String loggerMessage;
-
+			String responseMessage;
             // Log the attempt.
             Grasscutter.getLogger()
                     .info(translate("messages.dispatch.account.login_token_attempt", address));
 
             // Get account from database.
             Account account = DatabaseHelper.getAccountById(requestData.uid);
-
+			
+			//if token is null,restart input account and passwd
+			if(account.getSessionKey() == null || account.getToken() == null ){
+				responseMessage = translate("messages.dispatch.account.account_token_failure");
+				 response.retcode = -201;
+				 response.message = responseMessage;
+				return response;
+			}
+			
             // Check if account exists/token is valid.
             successfulLogin = account != null && account.getSessionKey().equals(requestData.token);
 

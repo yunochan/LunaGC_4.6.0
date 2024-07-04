@@ -1,55 +1,49 @@
 package emu.grasscutter.server.game;
 
-import static emu.grasscutter.config.Configuration.*;
-import static emu.grasscutter.utils.lang.Language.translate;
-
 import emu.grasscutter.*;
 import emu.grasscutter.Grasscutter.ServerRunMode;
 import emu.grasscutter.database.DatabaseHelper;
 import emu.grasscutter.game.Account;
 import emu.grasscutter.game.battlepass.BattlePassSystem;
-import emu.grasscutter.game.chat.ChatSystem;
-import emu.grasscutter.game.chat.ChatSystemHandler;
+import emu.grasscutter.game.chat.*;
 import emu.grasscutter.game.combine.CombineManger;
-import emu.grasscutter.game.drop.DropSystem;
-import emu.grasscutter.game.drop.DropSystemLegacy;
+import emu.grasscutter.game.drop.*;
 import emu.grasscutter.game.dungeons.DungeonSystem;
 import emu.grasscutter.game.expedition.ExpeditionSystem;
 import emu.grasscutter.game.gacha.GachaSystem;
-import emu.grasscutter.game.home.HomeWorld;
-import emu.grasscutter.game.home.HomeWorldMPSystem;
-import emu.grasscutter.game.managers.cooking.CookingCompoundManager;
-import emu.grasscutter.game.managers.cooking.CookingManager;
+import emu.grasscutter.game.home.*;
+import emu.grasscutter.game.managers.cooking.*;
 import emu.grasscutter.game.managers.energy.EnergyManager;
 import emu.grasscutter.game.managers.stamina.StaminaManager;
 import emu.grasscutter.game.player.Player;
 import emu.grasscutter.game.quest.QuestSystem;
 import emu.grasscutter.game.shop.ShopSystem;
-import emu.grasscutter.game.systems.AnnouncementSystem;
-import emu.grasscutter.game.systems.InventorySystem;
-import emu.grasscutter.game.systems.MultiplayerSystem;
+import emu.grasscutter.game.systems.*;
 import emu.grasscutter.game.talk.TalkSystem;
 import emu.grasscutter.game.tower.TowerSystem;
-import emu.grasscutter.game.world.World;
-import emu.grasscutter.game.world.WorldDataSystem;
+import emu.grasscutter.game.world.*;
 import emu.grasscutter.net.packet.PacketHandler;
 import emu.grasscutter.net.proto.SocialDetailOuterClass.SocialDetail;
 import emu.grasscutter.server.dispatch.DispatchClient;
 import emu.grasscutter.server.event.game.ServerTickEvent;
-import emu.grasscutter.server.event.internal.ServerStartEvent;
-import emu.grasscutter.server.event.internal.ServerStopEvent;
+import emu.grasscutter.server.event.internal.*;
 import emu.grasscutter.server.event.types.ServerEvent;
 import emu.grasscutter.server.scheduler.ServerTaskScheduler;
 import emu.grasscutter.task.TaskMap;
 import emu.grasscutter.utils.Utils;
 import it.unimi.dsi.fastutil.ints.*;
+import kcp.highway.*;
+import lombok.*;
+import org.jetbrains.annotations.*;
+import emu.grasscutter.server.game.session.GameSessionManager;
+
 import java.net.*;
 import java.time.*;
 import java.util.*;
 import java.util.concurrent.*;
-import kcp.highway.*;
-import lombok.*;
-import org.jetbrains.annotations.*;
+
+import static emu.grasscutter.config.Configuration.*;
+import static emu.grasscutter.utils.lang.Language.translate;
 
 @Getter
 public final class GameServer extends KcpServer implements Iterable<Player> {
@@ -60,6 +54,7 @@ public final class GameServer extends KcpServer implements Iterable<Player> {
     private final Set<World> worlds;
     private final Int2ObjectMap<HomeWorld> homeWorlds;
 
+    @Getter private boolean started = false;
     @Setter private DispatchClient dispatchClient;
 
     // Server systems
@@ -136,11 +131,11 @@ public final class GameServer extends KcpServer implements Iterable<Player> {
         channelConfig.setMtu(1400);
         channelConfig.setSndwnd(256);
         channelConfig.setRcvwnd(256);
-        channelConfig.setTimeoutMillis(30 * 1000); // 30s
+        channelConfig.setTimeoutMillis(60 * 1000); // 60s
         channelConfig.setUseConvChannel(true);
         channelConfig.setAckNoDelay(false);
 
-        this.init(GameSessionManager.getListener(), channelConfig, address);
+        this.init(GameSessionManager.getInstance(), channelConfig, address);
 
         EnergyManager.initialize();
         StaminaManager.initialize();
@@ -337,11 +332,14 @@ public final class GameServer extends KcpServer implements Iterable<Player> {
                 },
                 new Date(),
                 1000L);
-        Grasscutter.getLogger().info(translate("messages.status.free_software"));
+        Grasscutter.getLogger().info(translate("messages.status.free_software1"));
+        Grasscutter.getLogger().warn(translate("messages.status.free_software2"));
         Grasscutter.getLogger()
                 .info(translate("messages.game.address_bind", GAME_INFO.accessAddress, address.getPort()));
         ServerStartEvent event = new ServerStartEvent(ServerEvent.Type.GAME, OffsetDateTime.now());
         event.call();
+
+        this.started = true;
     }
 
     public void onServerShutdown() {
@@ -349,22 +347,36 @@ public final class GameServer extends KcpServer implements Iterable<Player> {
         event.call();
 
         // Save players & the world.
+        long startTime = System.currentTimeMillis();
+        Grasscutter.getLogger().info("开始保存玩家游戏数据...");
+
         this.getPlayers().forEach((uid, player) -> player.getSession().close());
         this.getWorlds().forEach(World::save);
 
-        Utils.sleep(1000L); // Wait 1 second for operations to finish.
-        this.stop(); // Stop the server.
+        Grasscutter.getLogger().info("数据保存完毕！");
+
+        long endTime = System.currentTimeMillis();
+        long duration = endTime - startTime;
+        Grasscutter.getLogger().info(String.format("数据保存耗时 %s ms", duration));
+
+         // Adjust waiting time based on measurement results
+        long waitTime = Math.max(2000L, duration + 1000L);
+        Utils.sleep(waitTime);
+        Grasscutter.getLogger().info(String.format("实际保存数据耗时 %s ms", waitTime));
+        // Stop the server.
+        this.stop();
 
         try {
-            var threadPool = GameSessionManager.getLogicThread();
+            var threadPool = GameSessionManager.getExecutor();
 
             // Shutdown network thread.
-            threadPool.shutdownGracefully();
+            threadPool.shutdown();
             // Wait for the network thread to finish.
             if (!threadPool.awaitTermination(5, TimeUnit.SECONDS)) {
                 Grasscutter.getLogger().error("Logic thread did not terminate!");
             }
         } catch (InterruptedException ignored) {
+            Grasscutter.getLogger().error("等待逻辑线程终止时被中断", ignored);
         }
     }
 

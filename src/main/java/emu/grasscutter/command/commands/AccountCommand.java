@@ -84,7 +84,7 @@ public final class AccountCommand implements CommandHandler {
                     if (Configuration.ACCOUNT.EXPERIMENTAL_RealPassword) {
                         account.setPassword(BCrypt.withDefaults().hashToString(12, password.toCharArray()));
                     }
-                    account.addPermission("*");
+                    //account.addPermission("*");
                     account.save(); // Save account to database.
 
                     CommandHandler.sendMessage(

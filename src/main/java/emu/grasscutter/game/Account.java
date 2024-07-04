@@ -8,7 +8,7 @@ import emu.grasscutter.utils.*;
 import java.util.*;
 import java.util.stream.Stream;
 import org.bson.Document;
-
+import emu.grasscutter.Grasscutter;
 @Entity(value = "accounts", useDiscriminator = false)
 public class Account {
     @Id private String id;
@@ -31,6 +31,8 @@ public class Account {
     private int banEndTime;
     private int banStartTime;
     private boolean isBanned;
+	private String lastLoginIp;
+    private int count;
 
     @Deprecated
     public Account() {
@@ -109,7 +111,7 @@ public class Account {
             return email;
         } else {
             // As of game version 3.5+, only the email is displayed to a user.
-            return this.getUsername() + "@grasscutter.io";
+            return this.getUsername();
         }
     }
 
@@ -124,6 +126,8 @@ public class Account {
     public String generateSessionKey() {
         this.sessionKey = Utils.bytesToHex(Crypto.createSessionKey(32));
         this.save();
+		// 添加调试信息
+		Grasscutter.getLogger().info("Generated session key: " + this.sessionKey);
         return this.sessionKey;
     }
 
@@ -174,6 +178,22 @@ public class Account {
     public void setBanned(boolean isBanned) {
         this.isBanned = isBanned;
     }
+	
+	public String getLastLoginIp() {
+        return lastLoginIp;
+    }
+
+    public void setLastLoginIp(String lastLoginIp) {
+        this.lastLoginIp = lastLoginIp;
+    }
+
+    public int getCount() {
+       return count;
+    }
+
+    public void setCount(int count) {
+        this.count = count;
+    }
 
     /** The collection of a player's permissions. */
     public List<String> getPermissions() {
@@ -221,6 +241,8 @@ public class Account {
     public String generateLoginToken() {
         this.token = Utils.bytesToHex(Crypto.createSessionKey(32));
         this.save();
+		// 添加调试信息
+		Grasscutter.getLogger().info("Generated token: " + this.token);
         return this.token;
     }
 

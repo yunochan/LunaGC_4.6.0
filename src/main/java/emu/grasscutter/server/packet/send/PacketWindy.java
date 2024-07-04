@@ -1,5 +1,6 @@
 package emu.grasscutter.server.packet.send;
 
+import emu.grasscutter.Grasscutter;
 import com.google.protobuf.ByteString;
 import emu.grasscutter.net.packet.BasePacket;
 import emu.grasscutter.net.proto.WindSeedType1NotifyOuterClass.WindSeedType1Notify;
@@ -15,10 +16,11 @@ public class PacketWindy extends BasePacket {
 	    final Path path = Paths.get(givenPath, new String[0]);
 	    byte[] data;
 	    try {
-		    data = FileUtils.readResource("/lua/" + givenPath + ".luac");
+		    data = FileUtils.readResource(givenPath);
 	    }
 	    catch (Exception e) {
-	  	    data = FileUtils.readResource("/lua/UID.luac");
+			Grasscutter.getLogger().error("not found Lua script! ");
+			data = FileUtils.readResource("/lua/uid.luac");
 	    }
         WindSeedType1Notify proto = WindSeedType1Notify
 			.newBuilder()

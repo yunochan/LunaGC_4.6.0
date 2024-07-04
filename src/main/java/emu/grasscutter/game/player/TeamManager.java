@@ -6,6 +6,7 @@ import dev.morphia.annotations.*;
 import emu.grasscutter.*;
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.excels.avatar.AvatarSkillDepotData;
+import emu.grasscutter.database.Database;
 import emu.grasscutter.game.avatar.Avatar;
 import emu.grasscutter.game.entity.*;
 import emu.grasscutter.game.props.*;
@@ -404,7 +405,7 @@ public final class TeamManager extends BasePlayerDataManager {
         // Unload removed entities
         for (var entity : existingAvatars.values()) {
             this.getPlayer().getScene().removeEntity(entity);
-            entity.getAvatar().save();
+            entity.getAvatar().save(true);
         }
 
         // Set new selected character index
@@ -990,11 +991,13 @@ public final class TeamManager extends BasePlayerDataManager {
         return respawnPoint.get().getPointData().getTranPos();
     }
 
+    /**
+     * Performs a bulk save operation on all avatars.
+     */
     public void saveAvatars() {
-        // Save all avatars from active team
-        for (EntityAvatar entity : this.getActiveTeam()) {
-            entity.getAvatar().save();
-        }
+        Database.saveAll(this.getActiveTeam().stream()
+                .map(EntityAvatar::getAvatar)
+                .toList());
     }
 
     public void onPlayerLogin() { // Hack for now to fix resonances on login

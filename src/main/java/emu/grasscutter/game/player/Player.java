@@ -8,7 +8,7 @@ import emu.grasscutter.data.excels.world.WeatherData;
 import emu.grasscutter.database.DatabaseHelper;
 import emu.grasscutter.game.*;
 import emu.grasscutter.game.ability.AbilityManager;
-import emu.grasscutter.game.achievement.Achievements;
+import emu.grasscutter.game.achievement.*;
 import emu.grasscutter.game.activity.ActivityManager;
 import emu.grasscutter.game.avatar.*;
 import emu.grasscutter.game.battlepass.BattlePassManager;
@@ -55,7 +55,7 @@ import emu.grasscutter.server.game.GameSession.SessionState;
 import emu.grasscutter.server.packet.send.*;
 import emu.grasscutter.utils.*;
 import emu.grasscutter.utils.helpers.DateHelper;
-import emu.grasscutter.utils.objects.FieldFetch;
+import emu.grasscutter.utils.objects.*;
 import it.unimi.dsi.fastutil.ints.*;
 import lombok.*;
 
@@ -66,7 +66,7 @@ import java.util.concurrent.*;
 import static emu.grasscutter.config.Configuration.GAME_OPTIONS;
 
 @Entity(value = "players", useDiscriminator = false)
-public class Player implements PlayerHook, FieldFetch {
+public class Player implements DatabaseObject<Player>, PlayerHook, FieldFetch {
     @Id private int id;
     @Indexed(options = @IndexOptions(unique = true))
     @Getter private String accountId;
@@ -262,6 +262,7 @@ public class Player implements PlayerHook, FieldFetch {
         this.clientAbilityInitFinishHandler = new InvokeHandler(PacketClientAbilityInitFinishNotify.class);
 
         this.birthday = new PlayerBirthday();
+        this.achievements = Achievements.blank();
         this.rewardedLevels = new HashSet<>();
         this.homeRewardedLevels = new HashSet<>();
         this.seenRealmList = new HashSet<>();
@@ -276,8 +277,10 @@ public class Player implements PlayerHook, FieldFetch {
         this.energyManager = new EnergyManager(this);
         this.resinManager = new ResinManager(this);
         this.forgingManager = new ForgingManager(this);
+        this.deforestationManager = new DeforestationManager(this);
         this.progressManager = new PlayerProgressManager(this);
         this.furnitureManager = new FurnitureManager(this);
+        this.battlePassManager = new BattlePassManager(this);
         this.cookingManager = new CookingManager(this);
         this.cookingCompoundManager = new CookingCompoundManager(this);
         this.satiationManager = new SatiationManager(this);
@@ -301,8 +304,7 @@ public class Player implements PlayerHook, FieldFetch {
         this.applyStartingSceneTags();
         this.getFlyCloakList().add(140001);
         this.getNameCardList().add(210001);
-
-        this.mapMarksManager = new MapMarksManager(this);
+                this.mapMarksManager = new MapMarksManager(this);
         this.staminaManager = new StaminaManager(this);
         this.sotsManager = new SotSManager(this);
         this.energyManager = new EnergyManager(this);
@@ -314,6 +316,7 @@ public class Player implements PlayerHook, FieldFetch {
         this.cookingManager = new CookingManager(this);
         this.cookingCompoundManager = new CookingCompoundManager(this);
         this.satiationManager = new SatiationManager(this);
+
     }
 
     @Override
@@ -573,17 +576,12 @@ public class Player implements PlayerHook, FieldFetch {
         this.setOrFetch(PlayerProperty.PROP_PLAYER_LEVEL, 1);
         this.setOrFetch(PlayerProperty.PROP_IS_SPRING_AUTO_USE, 1);
         this.setOrFetch(PlayerProperty.PROP_SPRING_AUTO_USE_PERCENT, 50);
-        this.setOrFetch(PlayerProperty.PROP_IS_FLYABLE,
-            withQuesting ? 0 : 1);
-        this.setOrFetch(PlayerProperty.PROP_PLAYER_CAN_DIVE,
-                withQuesting ? 0 : 1);
+		this.setOrFetch(PlayerProperty.PROP_IS_FLYABLE, 1);
+        this.setOrFetch(PlayerProperty.PROP_PLAYER_CAN_DIVE, 1);
         this.setOrFetch(PlayerProperty.PROP_IS_TRANSFERABLE, 1);
-        this.setOrFetch(PlayerProperty.PROP_MAX_STAMINA,
-            withQuesting ? 10000 : 24000);
-        this.setOrFetch(PlayerProperty.PROP_DIVE_MAX_STAMINA,
-                withQuesting ? 10000 : 0);
+        this.setOrFetch(PlayerProperty.PROP_MAX_STAMINA, 24000);
+        this.setOrFetch(PlayerProperty.PROP_DIVE_MAX_STAMINA, withQuesting ? 10000 : 0);
         this.setOrFetch(PlayerProperty.PROP_PLAYER_RESIN, 160);
-
         // The player's current stamina is always their max stamina.
         this.setProperty(PlayerProperty.PROP_CUR_PERSIST_STAMINA,
             this.getProperty(PlayerProperty.PROP_MAX_STAMINA));
@@ -1341,8 +1339,25 @@ public class Player implements PlayerHook, FieldFetch {
         this.getTeamManager().setPlayer(this);
     }
 
+    /**
+     * Saves this object to the database.
+     * As of Grasscutter 1.7.1, this is by default a {@link DatabaseObject#deferSave()} call.
+     */
     public void save() {
-        DatabaseHelper.savePlayer(this);
+        this.deferSave();
+    }
+
+    /**
+     * Saves this object to the database.
+     *
+     * @param immediate If true, this will be a {@link DatabaseObject#save()} call instead of a {@link DatabaseObject#deferSave()} call.
+     */
+    public void save(boolean immediate) {
+        if (immediate) {
+            DatabaseObject.super.save();
+        } else {
+            this.save();
+        }
     }
 
     // Called from tokenrsp
@@ -1377,6 +1392,14 @@ public class Player implements PlayerHook, FieldFetch {
                 this.getInventory().isLoaded());
 
         this.getPlayerProgress().setPlayer(this); // Add reference to the player.
+    }
+
+    /**
+     * Invoked when the player selects their avatar.
+     */
+    public void onPlayerBorn() {
+        Grasscutter.getThreadPool().submit(
+            this.getQuestManager()::onPlayerBorn);
     }
 
     public void onLogin() {
@@ -1505,20 +1528,19 @@ public class Player implements PlayerHook, FieldFetch {
             this.getProfile().syncWithCharacter(this);
 
             this.getCoopRequests().clear();
-            this.getEnterHomeRequests().values().forEach(req -> this.expireEnterHomeRequest(req, true));
+            this.getEnterHomeRequests().values()
+                    .forEach(req -> this.expireEnterHomeRequest(req, true));
             this.getEnterHomeRequests().clear();
 
             // Save to db
-            this.save();
+            this.save(true);
             this.getTeamManager().saveAvatars();
             this.getFriendsList().save();
 
             // Call quit event.
-            PlayerQuitEvent event = new PlayerQuitEvent(this);
-            event.call();
+            new PlayerQuitEvent(this).call();
         } catch (Throwable e) {
-            e.printStackTrace();
-            Grasscutter.getLogger().warn("Player (UID {}) save failure", getUid());
+            Grasscutter.getLogger().warn("Player (UID {}) failed to save.", this.getUid(), e);
         } finally {
             removeFromServer();
         }
@@ -1526,9 +1548,10 @@ public class Player implements PlayerHook, FieldFetch {
 
     public void removeFromServer() {
         // Remove from server.
-        //Note: DON'T DELETE BY UID,BECAUSE THERE ARE MULTIPLE SAME UID PLAYERS WHEN DUPLICATED LOGIN!
-        //so I decide to delete by object rather than uid
-        getServer().getPlayers().values().removeIf(player1 -> player1 == this);
+        // Note: DON'T DELETE BY UID, BECAUSE THERE ARE MULTIPLE SAME UID PLAYERS WHEN DUPLICATED LOGIN!
+        //s o I decide to delete by object rather than uid
+        this.getServer().getPlayers().values()
+                .removeIf(player1 -> player1 == this);
     }
 
     public void unfreezeUnlockedScenePoints(int sceneId) {

@@ -14,16 +14,26 @@ public final class GenericHandler implements Router {
         int playerCount = Grasscutter.getGameServer().getPlayers().size();
         int maxPlayer = ACCOUNT.maxPlayer;
         String version = GameConstants.VERSION;
+		double heapMemory = Grasscutter.getMemoryUsage();
+        double maxHeapMemory = Grasscutter.getMaxHeapMemory();
+        double heapMemoryUsedPercentage = (heapMemory / maxHeapMemory) * 100;
+		String runTime = Grasscutter.getRunTime();
+       // Format the response JSON
+        String response = String.format(
+                "{\n" +
+                        "  \"retcode\": 0,\n" +
+                        "  \"status\": {\n" +
+                        "    \"playerCount\": %d,\n" +
+                        "    \"maxPlayer\": %d,\n" +
+                        "    \"version\": \"%s\",\n" +
+                        "    \"useMemory\": \"%.2fGB / %.2fGB | %.2f%%\",\n" +
+						 "    \"runtime\": \"%s\"\n" +
+                        "  }\n" +
+                        "}",
+                playerCount, maxPlayer, version, heapMemory, maxHeapMemory, heapMemoryUsedPercentage, runTime);
 
-        ctx.result(
-                "{\"retcode\":0,\"status\":{\"playerCount\":"
-                        + playerCount
-                        + ",\"maxPlayer\":"
-                        + maxPlayer
-                        + ",\"version\":\""
-                        + version
-                        + "\"}}");
-    }
+        ctx.result(response);
+     }
 
     @Override
     public void applyRoutes(Javalin javalin) {

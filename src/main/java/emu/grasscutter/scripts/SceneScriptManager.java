@@ -65,8 +65,8 @@ public class SceneScriptManager {
     static {
         eventExecutor =
                 new ThreadPoolExecutor(
-                        4,
-                        4,
+                        8,
+                        16,
                         60,
                         TimeUnit.SECONDS,
                         new LinkedBlockingDeque<>(10000),

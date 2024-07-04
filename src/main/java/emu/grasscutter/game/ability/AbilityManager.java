@@ -36,8 +36,8 @@ public final class AbilityManager extends BasePlayerManager {
     static {
         eventExecutor =
                 new ThreadPoolExecutor(
-                        4,
-                        4,
+                        6,
+                        6,
                         60,
                         TimeUnit.SECONDS,
                         new LinkedBlockingDeque<>(1000),

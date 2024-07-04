@@ -202,7 +202,7 @@ public final class FileUtils {
         try (InputStream is = Grasscutter.class.getResourceAsStream(resourcePath)) {
             return is.readAllBytes();
         } catch (Exception exception) {
-            Grasscutter.getLogger().warn("Failed to read resource: " + resourcePath);
+            //Grasscutter.getLogger().warn("Failed to read resource: " + resourcePath);
             Grasscutter.getLogger().debug("Failed to load resource: " + resourcePath, exception);
         }
 

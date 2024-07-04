@@ -140,6 +140,7 @@ public class ConfigContainer {
         public boolean autoCreate = false;
         public boolean EXPERIMENTAL_RealPassword = false;
         public String[] defaultPermissions = {};
+        public String playerEmail = "grasscutter.io";
         public int maxPlayer = -1;
     }
 
@@ -163,6 +164,8 @@ public class ConfigContainer {
     }
 
     public static class Game {
+        public boolean useWindy = false; //是否添加水印
+        public boolean loginUnlockMap = false; //开局是否默认解锁全图
         public String bindAddress = "0.0.0.0";
         public int bindPort = 22102;
 
@@ -249,7 +252,7 @@ public class ConfigContainer {
     }
 
     public static class Encryption {
-        public boolean useEncryption = false;
+        public boolean useEncryption = true;
         /* Should 'https' be appended to URLs? */
         public boolean useInRouting = true;
         public String keystore = "./keystore.p12";
@@ -271,7 +274,7 @@ public class ConfigContainer {
         public int sceneEntityLimit = 1000; // Unenforced. TODO: Implement.
 
         public boolean watchGachaConfig = false;
-        public boolean enableShopItems = false;
+        public boolean enableShopItems = true;
         public boolean staminaUsage = true;
         public boolean energyUsage = true;
         public boolean fishhookTeleport = true;
@@ -311,7 +314,7 @@ public class ConfigContainer {
 
         public static class Questing {
             /* Should questing behavior be used? */
-            public boolean enabled = false;
+            public boolean enabled = true;
         }
 
         public static class HandbookOptions {
@@ -359,12 +362,13 @@ public class ConfigContainer {
     }
 
     public static class JoinOptions {
+        public static String noticeMessage = "Welcome to a Grasscutter server.";
         public int[] welcomeEmotes = {2007, 1002, 4010};
-        public String welcomeMessage = "Welcome to a LunaGC 4.6.0";
+        public String welcomeMessage = "Welcome to a Grasscutter server.";
         public JoinOptions.Mail welcomeMail = new JoinOptions.Mail();
 
         public static class Mail {
-            public String title = "Welcome to a LunaGC 4.6.0";
+            public String title = "Welcome to Grasscutter!";
             public String content = """
                     Hi there!\r
                     First of all, welcome to Grasscutter. If you have any issues, please let us know so that Lawnmower can help you! \r
@@ -372,7 +376,7 @@ public class ConfigContainer {
                     Check out our:\r
                     <type="browser" text="Discord" href="https://discord.gg/T5vZU6UyeG"/>
                     """;
-            public String sender = "Kei-Luna";
+            public String sender = "Lawnmower";
             public emu.grasscutter.game.mail.Mail.MailItem[] items = {
                 new emu.grasscutter.game.mail.Mail.MailItem(13509, 1, 1),
                 new emu.grasscutter.game.mail.Mail.MailItem(201, 99999, 1)
@@ -386,8 +390,8 @@ public class ConfigContainer {
         public int adventureRank = 1;
         public int worldLevel = 0;
 
-        public String nickName = "LunaGC";
-        public String signature = "Welcome to a LunaGC";
+        public String nickName = "Server";
+        public String signature = "Welcome to Grasscutter!";
     }
 
     public static class Files {
@@ -401,6 +405,7 @@ public class ConfigContainer {
     public static class Region {
         public String Name = "os_usa";
         public String Title = "Grasscutter";
+		public String DispatchUrl = "http://127.0.0.1:22102/query_cur_region";
         public String Ip = "127.0.0.1";
         public int Port = 22102;
 

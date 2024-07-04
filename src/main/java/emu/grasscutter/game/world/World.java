@@ -42,6 +42,10 @@ import lombok.Getter;
 import lombok.val;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.*;
+
+import static emu.grasscutter.server.event.player.PlayerTeleportEvent.TeleportType.SCRIPT;
+
 public class World implements Iterable<Player> {
     @Getter private final GameServer server;
     @Getter private Player host;
@@ -63,8 +67,8 @@ public class World implements Iterable<Player> {
 
     private static final ExecutorService eventExecutor =
             new ThreadPoolExecutor(
-                    4,
-                    4,
+                    8,
+                    16,
                     60,
                     TimeUnit.SECONDS,
                     new LinkedBlockingDeque<>(1000),
@@ -296,7 +300,7 @@ public class World implements Iterable<Player> {
         scene.removePlayer(player);
 
         // Info packet for other players
-        if (this.getPlayers().size() > 0) {
+        if (!this.getPlayers().isEmpty()) {
             this.updatePlayerInfos(player);
         }
 

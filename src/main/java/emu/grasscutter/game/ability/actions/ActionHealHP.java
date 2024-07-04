@@ -49,6 +49,7 @@ public final class ActionHealHP extends AbilityActionHandler {
         var amountByCasterCurrentHPRatio = action.amountByCasterCurrentHPRatio.get(properties, 0);
         var amountByTargetCurrentHPRatio = action.amountByTargetCurrentHPRatio.get(properties, 0);
         var amountByTargetMaxHPRatio = action.amountByTargetMaxHPRatio.get(properties, 0);
+
         var amountToRegenerate = action.amount.get(properties, 0);
 
         amountToRegenerate +=

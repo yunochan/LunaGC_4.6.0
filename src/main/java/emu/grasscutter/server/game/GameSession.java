@@ -1,24 +1,26 @@
 package emu.grasscutter.server.game;
 
-import static emu.grasscutter.config.Configuration.*;
-import static emu.grasscutter.utils.lang.Language.translate;
-
 import emu.grasscutter.Grasscutter;
 import emu.grasscutter.Grasscutter.ServerDebugMode;
 import emu.grasscutter.game.Account;
 import emu.grasscutter.game.player.Player;
+import emu.grasscutter.net.*;
 import emu.grasscutter.net.packet.*;
 import emu.grasscutter.server.event.game.SendPacketEvent;
 import emu.grasscutter.utils.*;
 import io.netty.buffer.*;
+import lombok.*;
+
 import java.io.File;
 import java.net.InetSocketAddress;
 import java.nio.file.Path;
-import lombok.*;
 
-public class GameSession implements GameSessionManager.KcpChannel {
+import static emu.grasscutter.config.Configuration.*;
+import static emu.grasscutter.utils.lang.Language.translate;
+
+public class GameSession implements KcpChannel {
     private final GameServer server;
-    private GameSessionManager.KcpTunnel tunnel;
+    private KcpTunnel tunnel;
 
     @Getter @Setter private Account account;
     @Getter private Player player;
@@ -146,7 +148,7 @@ public class GameSession implements GameSessionManager.KcpChannel {
                 if (packet.shouldEncrypt) {
                     Crypto.xor(bytes, packet.useDispatchKey() ? Crypto.DISPATCH_KEY : this.encryptKey);
                 }
-                tunnel.writeData(bytes);
+                this.tunnel.writeData(bytes);
             } catch (Exception ignored) {
                 Grasscutter.getLogger().debug("Unable to send packet to client.");
             }
@@ -154,13 +156,13 @@ public class GameSession implements GameSessionManager.KcpChannel {
     }
 
     @Override
-    public void onConnected(GameSessionManager.KcpTunnel tunnel) {
+    public void onConnected(KcpTunnel tunnel) {
         this.tunnel = tunnel;
         Grasscutter.getLogger().info(translate("messages.game.connect", this.getAddress().toString()));
     }
 
     @Override
-    public void handleReceive(byte[] bytes) {
+    public void onMessage(byte[] bytes) {
         // Decrypt and turn back into a packet
         Crypto.xor(bytes, useSecretKey() ? this.encryptKey : Crypto.DISPATCH_KEY);
         ByteBuf packet = Unpooled.wrappedBuffer(bytes);
@@ -226,8 +228,8 @@ public class GameSession implements GameSessionManager.KcpChannel {
                 // Handle
                 getServer().getPacketHandler().handle(this, opcode, header, payload);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception exception) {
+            Grasscutter.getLogger().warn("Unable to handle packet.", exception);
         } finally {
             // byteBuf.release(); //Needn't
             packet.release();
@@ -235,8 +237,9 @@ public class GameSession implements GameSessionManager.KcpChannel {
     }
 
     @Override
-    public void handleClose() {
+    public void onDisconnected() {
         setState(SessionState.INACTIVE);
+
         // send disconnection pack in case of reconnection
         Grasscutter.getLogger()
                 .info(translate("messages.game.disconnect", this.getAddress().toString()));
@@ -251,11 +254,11 @@ public class GameSession implements GameSessionManager.KcpChannel {
         } catch (Throwable ignore) {
             Grasscutter.getLogger().warn("closing {} error", getAddress().getAddress().getHostAddress());
         }
-        tunnel = null;
+        //tunnel = null;
     }
 
     public void close() {
-        tunnel.close();
+		tunnel.close();
     }
 
     public boolean isActive() {

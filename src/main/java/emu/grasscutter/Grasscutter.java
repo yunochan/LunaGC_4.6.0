@@ -1,8 +1,5 @@
 package emu.grasscutter;
 
-import static emu.grasscutter.config.Configuration.SERVER;
-import static emu.grasscutter.utils.lang.Language.translate;
-
 import ch.qos.logback.classic.*;
 import emu.grasscutter.auth.*;
 import emu.grasscutter.command.*;
@@ -21,15 +18,26 @@ import emu.grasscutter.tools.Tools;
 import emu.grasscutter.utils.*;
 import emu.grasscutter.utils.lang.Language;
 import io.netty.util.concurrent.FastThreadLocalThread;
-import java.io.*;
-import java.util.Calendar;
-import java.util.concurrent.*;
-import javax.annotation.Nullable;
 import lombok.*;
 import org.jline.reader.*;
 import org.jline.terminal.*;
 import org.reflections.Reflections;
 import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nullable;
+import java.io.*;
+import java.util.Calendar;
+import java.util.concurrent.*;
+
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
+import java.lang.management.MemoryUsage;
+import java.text.DecimalFormat;
+import java.time.Duration;
+import java.time.Instant;
+
+import static emu.grasscutter.config.Configuration.SERVER;
+import static emu.grasscutter.utils.lang.Language.translate;
 
 public final class Grasscutter {
     public static final File configFile = new File("./config.json");
@@ -55,12 +63,13 @@ public final class Grasscutter {
     @Getter @Setter private static PermissionHandler permissionHandler;
 
     private static LineReader consoleLineReader = null;
-
+	private static final long startTimeMillis;
+	
     @Getter
     private static final ExecutorService threadPool =
             new ThreadPoolExecutor(
-                    6,
-                    6,
+                    10,
+                    20,
                     60,
                     TimeUnit.SECONDS,
                     new LinkedBlockingDeque<>(),
@@ -68,6 +77,10 @@ public final class Grasscutter {
                     new ThreadPoolExecutor.AbortPolicy());
 
     static {
+		
+		// Initialize startTimeMillis
+        startTimeMillis = System.currentTimeMillis();
+		
         // Declare logback configuration.
         System.setProperty("logback.configurationFile", "src/main/resources/logback.xml");
 
@@ -106,7 +119,7 @@ public final class Grasscutter {
         // Initialize server.
         logger.info(translate("messages.status.starting"));
         logger.info(translate("messages.status.game_version", GameConstants.VERSION));
-        logger.info(translate("messages.status.version", "4.6.0", "KeiLuna"));
+        logger.info(translate("messages.status.version", BuildConfig.VERSION, BuildConfig.GIT_HASH));
 
         // Initialize database.
         DatabaseManager.initialize();
@@ -183,33 +196,47 @@ public final class Grasscutter {
         // Hook into shutdown event.
         Runtime.getRuntime().addShutdownHook(new Thread(Grasscutter::onShutdown));
 
+        // Start database heartbeat.
+        Database.startSaveThread();
+
         // Open console.
         Grasscutter.startConsole();
     }
 
     /** Server shutdown event. */
     private static void onShutdown() {
+        // Save all data.
+        Database.saveAll();
+
         // Disable all plugins.
         if (pluginManager != null) pluginManager.disablePlugins();
+        Grasscutter.getLogger().info("所有插件已禁用。");
+
         // Shutdown the game server.
         if (gameServer != null) gameServer.onServerShutdown();
+        Grasscutter.getLogger().info("游戏服务器已关闭。");
 
         try {
             // Wait for Grasscutter's thread pool to finish.
             var executor = Grasscutter.getThreadPool();
             executor.shutdown();
-            if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
+            if (!executor.awaitTermination(1, TimeUnit.MINUTES)) {
+                Grasscutter.getLogger().warn("线程池未能在1分钟内关闭，正在强制关闭...");
                 executor.shutdownNow();
             }
 
             // Wait for database operations to finish.
             var dbExecutor = DatabaseHelper.getEventExecutor();
             dbExecutor.shutdown();
-            if (!dbExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
+            if (!dbExecutor.awaitTermination(2, TimeUnit.MINUTES)) {
+                Grasscutter.getLogger().warn("数据库线程池未能在2分钟内关闭，正在强制关闭...");
                 dbExecutor.shutdownNow();
             }
         } catch (InterruptedException ignored) {
+            Grasscutter.getLogger().error("线程池关闭时被中断", ignored);
         }
+        Grasscutter.getLogger().info("所有线程池已关闭。");
+        Grasscutter.getLogger().info("服务器关闭程序已完成。");
     }
 
     /** Utility method for starting the: - SDK server - Dispatch server */
@@ -315,6 +342,45 @@ public final class Grasscutter {
         logger.debug("Set day of week to " + currentDayOfWeek);
     }
 
+    /**
+     * Returns the heapMemory usage of the server, in megabytes.
+     */
+    public static double getMemoryUsage() {
+		 MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
+        MemoryUsage heapMemoryUsage = memoryMXBean.getHeapMemoryUsage();
+        double usedMemorySize = (double) heapMemoryUsage.getUsed() / 1_073_741_824L;
+        DecimalFormat df = new DecimalFormat("#0.00"); 
+        return Double.parseDouble(df.format(usedMemorySize));
+    }
+	
+    public static double getMaxHeapMemory() {
+		MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
+		MemoryUsage heapMemoryUsage = memoryMXBean.getHeapMemoryUsage();
+		double maxMemorySize = (double) heapMemoryUsage.getMax() / 1_073_741_824L;
+		 DecimalFormat df = new DecimalFormat("#.##");
+		 return Double.parseDouble(df.format(maxMemorySize));
+    }
+	
+	/**
+     * Returns the formatted runtime of the Java program.
+     *  Example output: "20-16:29:30"
+     */
+	   public static String getRunTime() {
+        Instant startTime = Instant.ofEpochMilli(startTimeMillis);
+        Instant now = Instant.now();
+        Duration duration = Duration.between(startTime, now);
+
+        long days = duration.toDays();
+        duration = duration.minusDays(days);
+        long hours = duration.toHours();
+        duration = duration.minusHours(hours);
+        long minutes = duration.toMinutes();
+        duration = duration.minusMinutes(minutes);
+        long seconds = duration.getSeconds();
+
+       return String.format("%d-%02d:%02d:%02d", days, hours, minutes, seconds);
+    }
+	
     public static void startConsole() {
         // Console should not start in dispatch only mode.
         if (Grasscutter.getRunMode() == ServerRunMode.DISPATCH_ONLY && Grasscutter.noConsole) {
@@ -338,7 +404,7 @@ public final class Grasscutter {
                     Runtime.getRuntime().exit(0);
                 }
             } catch (EndOfFileException e) {
-                logger.info("EOF detected.");
+                //logger.info("EOF detected.");
                 continue;
             } catch (IOError e) {
                 logger.error("An IO error occurred while trying to read from console.", e);

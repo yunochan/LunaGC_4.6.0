@@ -1,6 +1,5 @@
 package emu.grasscutter.game.player;
 
-import emu.grasscutter.Grasscutter;
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.binout.AbilityModifier.AbilityModifierAction;
 import emu.grasscutter.data.excels.BuffData;

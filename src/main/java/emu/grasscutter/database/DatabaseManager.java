@@ -61,7 +61,7 @@ public final class DatabaseManager {
 
             dispatchDatastore =
                     Morphia.createDatastore(dispatchMongoClient, DATABASE.server.collection, mapperOptions);
-            dispatchDatastore.getMapper().map(new Class<?>[] {DatabaseCounter.class, Account.class});
+            dispatchDatastore.getMapper().map(new Class<?>[] {DatabaseCounter.class, Account.class, LoginBlackIPConfig.class});
 
             // Ensure indexes for dispatch datastore
             ensureIndexes(dispatchDatastore);

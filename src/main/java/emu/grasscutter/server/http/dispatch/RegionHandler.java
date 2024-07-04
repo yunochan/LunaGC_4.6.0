@@ -11,6 +11,7 @@ import emu.grasscutter.net.proto.QueryRegionListHttpRspOuterClass.QueryRegionLis
 import emu.grasscutter.net.proto.RegionInfoOuterClass.RegionInfo;
 import emu.grasscutter.net.proto.RegionSimpleInfoOuterClass.RegionSimpleInfo;
 import emu.grasscutter.net.proto.RetcodeOuterClass.Retcode;
+import emu.grasscutter.net.proto.ResVersionConfigOuterClass;
 import emu.grasscutter.net.proto.StopServerInfoOuterClass.StopServerInfo;
 import emu.grasscutter.server.event.dispatch.*;
 import emu.grasscutter.server.http.Router;
@@ -74,22 +75,21 @@ public final class RegionHandler implements Router {
                     }
 
                     // Create a region identifier.
+					var dispatchUrl = (region.DispatchUrl != null && !region.DispatchUrl.isEmpty()) ? region.DispatchUrl : dispatchDomain + "/query_cur_region/" + region.Name;
                     var identifier =
                             RegionSimpleInfo.newBuilder()
                                     .setName(region.Name)
                                     .setTitle(region.Title)
                                     .setType("DEV_PUBLIC")
-                                    .setDispatchUrl(dispatchDomain + "/query_cur_region/" + region.Name)
+                                    .setDispatchUrl(dispatchUrl)
                                     .build();
                     usedNames.add(region.Name);
                     servers.add(identifier);
 
                     // Create a region info object.
-                    var regionInfo =
-                            RegionInfo.newBuilder()
-                                    .setGateserverIp(region.Ip)
-                                    .setGateserverPort(region.Port)
-                                    .build();
+                    HotUpdateResourceDownload.Resource hotfix = new HotUpdateResourceDownload.Resource();
+
+					var regionInfo = RegionInfo.newBuilder().setGateserverIp(region.Ip).setGateserverPort(region.Port).setResourceUrl(hotfix.resourceUrl).setDataUrl(hotfix.dataUrl).setResourceUrlBak(hotfix.resourceUrlBak).setClientDataVersion(hotfix.clientDataVersion).setClientSilenceDataVersion(hotfix.clientSilenceDataVersion).setClientDataMd5(hotfix.clientDataMd5).setClientSilenceDataMd5(hotfix.clientSilenceDataMd5).setResVersionConfig(ResVersionConfigOuterClass.ResVersionConfig.newBuilder().setVersion(hotfix.resVersionConfig.version).setMd5(hotfix.resVersionConfig.md5).setReleaseTotalSize(hotfix.resVersionConfig.releaseTotalSize).setVersionSuffix(hotfix.resVersionConfig.versionSuffix).setBranch(hotfix.resVersionConfig.branch).build()).setClientVersionSuffix(hotfix.clientVersionSuffix).setClientSilenceVersionSuffix(hotfix.clientSilenceVersionSuffix).setNextResourceUrl(hotfix.nextResourceUrl).setNextResVersionConfig(ResVersionConfigOuterClass.ResVersionConfig.newBuilder().setVersion(hotfix.nextResVersionConfig.version).setMd5(hotfix.nextResVersionConfig.md5).setReleaseTotalSize(hotfix.nextResVersionConfig.releaseTotalSize).setVersionSuffix(hotfix.nextResVersionConfig.versionSuffix).setBranch(hotfix.nextResVersionConfig.branch)).setSecretKey(ByteString.copyFrom(Crypto.DISPATCH_SEED)).build();
                     // Create an updated region query.
                     var updatedQuery =
                             QueryCurrRegionHttpRsp.newBuilder()
@@ -106,7 +106,7 @@ public final class RegionHandler implements Router {
         var hiddenIcons = new JsonArray();
         hiddenIcons.add(40);
         var codeSwitch = new JsonArray();
-        codeSwitch.add(4334);
+        codeSwitch.add(3628);
 
         // Create a config object.
         var customConfig = new JsonObject();
@@ -263,18 +263,18 @@ public final class RegionHandler implements Router {
                     QueryCurrRegionHttpRsp rsp =
                             QueryCurrRegionHttpRsp.newBuilder()
                                     .setRetcode(Retcode.RET_STOP_SERVER_VALUE)
-                                    .setMsg("Connection Failed!")
+                                    .setMsg("连接失败！")
                                     .setRegionInfo(RegionInfo.newBuilder())
                                     .setStopServer(
                                             StopServerInfo.newBuilder()
-                                                    .setUrl("https://discord.gg/T5vZU6UyeG")
+                                                    .setUrl("https://in.fanbook.cn/glaze")
                                                     .setStopBeginTime((int) Instant.now().getEpochSecond())
                                                     .setStopEndTime((int) Instant.now().getEpochSecond() + 1)
                                                     .setContentMsg(
                                                             updateClient
-                                                                    ? "\nVersion mismatch outdated client! \n\nServer version: %s\nClient version: %s"
+                                                                    ? "\n版本不匹配，客户端已过期！ \n\n服务器版本: %s\n客户端版本: %s"
                                                                             .formatted(GameConstants.VERSION, clientVersion)
-                                                                    : "\nVersion mismatch outdated server! \n\nServer version: %s\nClient version: %s"
+                                                                    : "\n版本不匹配，服务器已过期！ \n\n服务器版本: %s\n客户端版本: %s"
                                                                             .formatted(GameConstants.VERSION, clientVersion))
                                                     .build())
                                     .buildPartial();
