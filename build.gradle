@@ -166,7 +166,7 @@ jar {
         attributes 'Main-Class': 'emu.grasscutter.Grasscutter'
     }
 
-    archiveBaseName = 'LunaGC'
+    archiveBaseName = 'GasaiGC'
     if (project.hasProperty('jarFilename')) {
         archiveFileName = "${jarFilename}.${archiveExtension}"
     }

@@ -32,15 +32,23 @@
         "login_token_success": "[Dispatch] 客户端 %s 已通过 token 登录，UID 为 %s",
         "login_password_error": "[Dispatch] 客户端 %s 无法通过密码登录",
         "login_password_storage_error": "[Dispatch] 客户端 %s 因数据库中没有密码而无法登录",
+        "login_ip_change_warning": "[Dispatch] 账号 %s 异地登录，%s -> %s",
+        "login_ip_blocked_warning": "[Dispatch] 客户端 %s 因被系统拉黑而无法登录",
+        "login_ip_blocked_message": "ip在黑名单里",
         "combo_token_success": "[Dispatch] 客户端 %s 成功交换 token",
         "combo_token_error": "[Dispatch] 客户端 %s 交换 token 失败",
         "account_login_create_success": "[Dispatch] 客户端 %s 登录失败：已注册 UID 为 %s 的账号",
         "account_login_create_error": "[Dispatch] 客户端 %s 登录失败：账号创建失败",
+        "account_login_banned_error": "登录失败，账号%s被封禁,",
         "account_login_exist_error": "[Dispatch] 客户端 %s 登录失败：账号不存在",
+        "account.token_failure": "token验证失败，请重新输入账密登录",
         "account_cache_error": "游戏账号缓存信息错误",
         "session_key_error": "会话密钥错误",
-        "username_error": "未找到用户名",
-        "username_create_error": "用户名不存在，登录失败",
+        "username_format_error": "账号只能由英文字母、数字和下划线组成，长度为8-16个字符，并需要包含英文字母和数字",
+        "account_login_format_error": "账号格式错误，注册失败",
+        "username_error": "账号未注册",
+        "username_create_error": "账号不存在，登录失败",
+        "username_banned": "您的账号已经封停，有任何问题请联系管理员",
         "password_error": "登录失败，请确认账号/密码是否正确",
         "password_length_error": "密码必须大于或等于 8 位",
         "password_storage_error": "你没有密码，请联系管理员",
@@ -49,7 +57,8 @@
       "router_error": "[Dispatch] 无法连接路由"
     },
     "status": {
-      "free_software": "Grasscutter 是免费开源软件，遵循 AGPL-3.0 license。\n\t如果你是付费购买的，那你已经被骗了。\n\t项目地址：https://github.com/Grasscutters/Grasscutter",
+      "free_software1": "基于Github开源项目 Grasscutter，由 Gasai 制作，优化服务端性能和修复部分BUG",
+      "free_software2": "倒卖亲妈爆炸，请勿用于商业用途，仅供研究交流使用。QQ群 906519824",
       "starting": "正在启动 Grasscutter...",
       "shutdown": "正在关闭...",
       "done": "加载完成！输入 \"help\" 查看命令列表",
@@ -59,7 +68,7 @@
       "run_mode_help": "服务器运行模式必须为 'HYBRID'(混合)、'DISPATCH_ONLY'(仅 Dispatch) 或 'GAME_ONLY'(仅游戏)。Grasscutter 启动失败...",
       "create_resources": "正在创建 resources 目录...",
       "resources_error": "请将 BinOutput 和 ExcelBinOutput 复制到 resources 目录",
-      "version": "Grasscutter 版本：%s-%s",
+      "version": "Grasscutter 版本：%s",
       "game_version": "游戏版本：%s",
       "resources": {
         "loading": "正在加载 resources...",
@@ -74,7 +83,7 @@
     "generic": {
       "not_specified": "未指定命令。",
       "unknown_command": "未知命令：%s",
-      "permission_error": "你没有权限执行此命令。",
+      "permission_error": "你没有权限执行此命令，该指令需要管理员权限",
       "console_execute_error": "此命令只能在控制台执行。",
       "player_execute_error": "此命令只能在游戏内执行。",
       "command_exist_error": "未找到命令。",
@@ -122,7 +131,7 @@
     },
     "account": {
       "invalid": "无效的 UID。",
-      "exists": "具有此用户名和/或 UID 的账号已存在。",
+      "exists": "具有此账号和/或 UID 的账号已存在。",
       "create": "已创建 UID 为 %s 的账号。",
       "delete": "账号已删除。",
       "no_account": "账号不存在。",
@@ -200,6 +209,7 @@
     "kick": {
       "player_kick_player": "玩家 [%s:%s] 已将 [%s:%s] 踢出。",
       "server_kick_player": "正在踢出玩家 [%s:%s]...",
+      "server_kick_player_all": "踢出全部玩家。",
       "description": "从服务器内踢出指定玩家"
     },
     "killall": {
@@ -337,6 +347,7 @@
     "spawn": {
       "success": "已生成 %s 个 %s。",
       "limit_reached": "场景中的生成数量已达上限。已替代为生成 %s 个实体。",
+      "limit_exceeded": "生成数量超过设定上限。生成数量必须在 0-20 之间。",
       "description": "在你附近生成实体"
     },
     "stop": {

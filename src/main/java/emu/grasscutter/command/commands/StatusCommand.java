@@ -8,7 +8,7 @@ import emu.grasscutter.game.player.Player;
 import emu.grasscutter.command.Command;
 import emu.grasscutter.command.CommandHandler;
 import java.util.List;
-@Command(label = "status", aliases = { "st" }, permission = "admin.status", targetRequirement = Command.TargetRequirement.NONE)
+@Command(label = "status", aliases = { "st" }, permission = "server.status", targetRequirement = Command.TargetRequirement.NONE)
 
 public final class StatusCommand implements CommandHandler
 {
