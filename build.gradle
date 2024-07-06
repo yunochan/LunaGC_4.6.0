@@ -148,6 +148,8 @@ dependencies {
     annotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.18.30'
     testCompileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.30'
     testAnnotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.18.30'
+	
+	implementation group: 'it.unimi.dsi', name: 'fastutil', version: '8.5.12'
 }
 
 configurations.configureEach {
