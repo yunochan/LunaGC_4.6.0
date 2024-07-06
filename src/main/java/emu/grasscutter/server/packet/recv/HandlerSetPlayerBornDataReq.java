@@ -83,7 +83,7 @@ public class HandlerSetPlayerBornDataReq extends PacketHandler {
         // project.
         mailBuilder.mail.mailContent.content =
                 welcomeMail.content
-                        + "\n<type=\"browser\" text=\"GitHub\" href=\"https://github.com/Grasscutters/Grasscutter\"/>"+"\n<type=\"browser\" text=\"爱发电\" href=\"https://afdian.net/a/glazesr\"/>";
+                        + "\n<type=\"browser\" text=\"GitHub\" href=\"https://github.com/Grasscutters/Grasscutter\"/>";
         mailBuilder.mail.itemList.addAll(Arrays.asList(welcomeMail.items));
         mailBuilder.mail.importance = 1;
         player.sendMail(mailBuilder.mail);

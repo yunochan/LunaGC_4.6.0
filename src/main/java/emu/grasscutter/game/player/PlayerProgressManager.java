@@ -5,6 +5,9 @@ import static emu.grasscutter.config.Configuration.GAME_INFO;
 import static emu.grasscutter.scripts.constants.EventType.EVENT_UNLOCK_TRANS_POINT;
 
 import emu.grasscutter.command.commands.WindyCommand;
+import emu.grasscutter.command.commands.SendMailCommand.MailBuilder;
+import emu.grasscutter.game.mail.*;
+import emu.grasscutter.Grasscutter;
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.binout.ScenePointEntry;
 import emu.grasscutter.data.excels.OpenStateData;
@@ -17,6 +20,7 @@ import emu.grasscutter.server.packet.send.*;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.List;
+import java.util.Arrays;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -110,6 +114,25 @@ public final class PlayerProgressManager extends BasePlayerDataManager {
             this.setOpenState(47, 1, true);
         }
     }
+	
+	 /**********
+     * Send Welcome Mail to Player
+     **********/
+	public void sendWelcomeMail() {
+		// Default mail
+		var welcomeMail = GAME_INFO.joinOptions.welcomeMail;
+		MailBuilder mailBuilder = new MailBuilder(this.player.getUid(), new Mail());
+		mailBuilder.mail.mailContent.title = welcomeMail.title;
+		mailBuilder.mail.mailContent.sender = welcomeMail.sender;
+		mailBuilder.mail.mailContent.content =
+				welcomeMail.content
+						+ "\n<type=\"browser\" text=\"社区官网\" href=\"https://gzblog.com.cn\"/>";
+		mailBuilder.mail.itemList.addAll(Arrays.asList(welcomeMail.items));
+		mailBuilder.mail.importance = 1;
+		
+		mailBuilder.mail.setOwnerUid(this.player.getUid());
+		this.player.sendMail(mailBuilder.mail);
+	}
 
     /**********
      * Direct getters and setters for open states.
@@ -240,23 +263,26 @@ public final class PlayerProgressManager extends BasePlayerDataManager {
      *****************************************************************************************************************/
     private void addStatueQuestsOnLogin() {
         // Get all currently existing subquests for the "unlock all statues" main quest.
-        var statueMainQuest = GameData.getMainQuestDataMap().get(303);
+        var statueMainQuest = GameData.getMainQuestDataMap().get(354);
         var statueSubQuests = statueMainQuest.getSubQuests();
 
         // Add the main statue quest if it isn't active yet.
-        var statueGameMainQuest = this.player.getQuestManager().getMainQuestById(303);
+        var statueGameMainQuest = this.player.getQuestManager().getMainQuestById(354);
         if (statueGameMainQuest == null) {
-            this.player.getQuestManager().addQuest(30302);
-            statueGameMainQuest = this.player.getQuestManager().getMainQuestById(303);
+            this.player.getQuestManager().addQuest(35401);
+            statueGameMainQuest = this.player.getQuestManager().getMainQuestById(354);
+			sendWelcomeMail();
         }
 
         // Set all subquests to active if they aren't already finished.
-        for (var subData : statueSubQuests) {
+        /*
+		for (var subData : statueSubQuests) {
             var subGameQuest = statueGameMainQuest.getChildQuestById(subData.getSubId());
             if (subGameQuest != null && subGameQuest.getState() == QuestState.QUEST_STATE_UNSTARTED) {
                 this.player.getQuestManager().addQuest(subData.getSubId());
             }
         }
+		*/
     }
 
     public boolean unlockTransPoint(int sceneId, int pointId, boolean isStatue) {
