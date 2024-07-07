@@ -179,10 +179,11 @@ public class Inventory extends BasePlayerManager implements Iterable<GameItem> {
                 changedItems.add(result);
             }
         }
-        if (changedItems.size() == 0) {
+        if (changedItems.isEmpty()) {
             return;
         }
-        getPlayer().sendPacket(new PacketStoreItemChangeNotify(changedItems));
+                getPlayer().sendPacket(new PacketStoreItemChangeNotify(changedItems));
+
         if (reason != null) {
             getPlayer().sendPacket(new PacketItemAddHintNotify(items, reason));
         }
@@ -308,7 +309,7 @@ public class Inventory extends BasePlayerManager implements Iterable<GameItem> {
                 // Adds to inventory
                 this.putItem(item, tab);
                 // Set ownership and save to db
-                item.save();
+                item.save(true);
                 return item;
             }
             case ITEM_VIRTUAL -> {
@@ -339,7 +340,7 @@ public class Inventory extends BasePlayerManager implements Iterable<GameItem> {
                             }
                             this.putItem(item, tab);
                             // Set ownership and save to db
-                            item.save();
+                            item.save(true);
                             return item;
                         } else {
                             // Add count
@@ -347,7 +348,7 @@ public class Inventory extends BasePlayerManager implements Iterable<GameItem> {
                                     Math.min(
                                             existingItem.getCount() + item.getCount(),
                                             item.getItemData().getStackLimit()));
-                            existingItem.save();
+                            existingItem.save(true);
                             return existingItem;
                         }
                     }
@@ -604,7 +605,7 @@ public class Inventory extends BasePlayerManager implements Iterable<GameItem> {
         this.triggerRemItemEvents(item, removeCount);
 
         // Update in db
-        item.save();
+        item.save(true);
 
         // Returns true on success
         return true;
@@ -682,7 +683,7 @@ public class Inventory extends BasePlayerManager implements Iterable<GameItem> {
 
                 if (!hasEquipped) {
                     item.setEquipCharacter(0);
-                    item.save();
+                    item.save(true);
                 }
             }
         }

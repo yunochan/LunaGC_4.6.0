@@ -8,7 +8,7 @@ import emu.grasscutter.data.excels.world.WeatherData;
 import emu.grasscutter.database.DatabaseHelper;
 import emu.grasscutter.game.*;
 import emu.grasscutter.game.ability.AbilityManager;
-import emu.grasscutter.game.achievement.*;
+import emu.grasscutter.game.achievement.Achievements;
 import emu.grasscutter.game.activity.ActivityManager;
 import emu.grasscutter.game.avatar.*;
 import emu.grasscutter.game.battlepass.BattlePassManager;
@@ -55,7 +55,8 @@ import emu.grasscutter.server.game.GameSession.SessionState;
 import emu.grasscutter.server.packet.send.*;
 import emu.grasscutter.utils.*;
 import emu.grasscutter.utils.helpers.DateHelper;
-import emu.grasscutter.utils.objects.*;
+import emu.grasscutter.utils.objects.FieldFetch;
+import emu.grasscutter.utils.objects.DatabaseObject;
 import it.unimi.dsi.fastutil.ints.*;
 import lombok.*;
 
@@ -277,7 +278,6 @@ public class Player implements DatabaseObject<Player>, PlayerHook, FieldFetch {
         this.energyManager = new EnergyManager(this);
         this.resinManager = new ResinManager(this);
         this.forgingManager = new ForgingManager(this);
-        this.deforestationManager = new DeforestationManager(this);
         this.progressManager = new PlayerProgressManager(this);
         this.furnitureManager = new FurnitureManager(this);
         this.battlePassManager = new BattlePassManager(this);
@@ -316,7 +316,6 @@ public class Player implements DatabaseObject<Player>, PlayerHook, FieldFetch {
         this.cookingManager = new CookingManager(this);
         this.cookingCompoundManager = new CookingCompoundManager(this);
         this.satiationManager = new SatiationManager(this);
-
     }
 
     @Override

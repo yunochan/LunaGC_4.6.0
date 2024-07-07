@@ -20,7 +20,8 @@ import emu.grasscutter.net.proto.ReliquaryOuterClass.Reliquary;
 import emu.grasscutter.net.proto.SceneReliquaryInfoOuterClass.SceneReliquaryInfo;
 import emu.grasscutter.net.proto.SceneWeaponInfoOuterClass.SceneWeaponInfo;
 import emu.grasscutter.net.proto.WeaponOuterClass.Weapon;
-import emu.grasscutter.utils.objects.*;
+import emu.grasscutter.utils.objects.WeightedList;
+import emu.grasscutter.utils.objects.DatabaseObject;
 import lombok.*;
 import org.bson.types.ObjectId;
 
@@ -269,7 +270,7 @@ public class GameItem implements DatabaseObject<GameItem> {
     public void save() {
         if (this.count > 0 && this.ownerId > 0) {
             this.deferSave();
-        } else {
+        } else if (this.getObjectId() != null) {
             DatabaseHelper.deleteItem(this);
         }
     }
@@ -280,18 +281,17 @@ public class GameItem implements DatabaseObject<GameItem> {
      * @param immediate If true, this will be a {@link DatabaseObject#save()} call instead of a {@link DatabaseObject#deferSave()} call.
      */
     public void save(boolean immediate) {
-        if (this.count < 0 || this.ownerId <= 0) {
+        if (this.count > 0 && this.ownerId > 0) {
+            if (immediate) {
+                DatabaseObject.super.save();
+            } else {
+                this.deferSave();
+            }
+        } else if (this.getObjectId() != null) {
             DatabaseHelper.deleteItem(this);
-            return;
-        }
-
-        if (immediate) {
-            DatabaseObject.super.save();
-        } else {
-            this.save();
         }
     }
-
+    
     public SceneWeaponInfo createSceneWeaponInfo() {
         var weaponInfo =
                 SceneWeaponInfo.newBuilder()
